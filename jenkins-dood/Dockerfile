@@ -22,31 +22,27 @@ RUN wget --progress=bar:force -O - https://jenkins-ci.org/debian/jenkins-ci.org.
 	&& apt-get purge \
 	&& rm -rf /var/lib/apt/lists/*
 
+
 # Install Docker from Docker Inc. repositories.
-#ARG DOCKER_VERSION=1.12.0
-#RUN curl -L -O https://get.docker.com/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz && ls && pwd
-#RUN pwd && ls &&  tar zxf docker-${DOCKER_VERSION}.tgz -C /
-
 ARG DOCKER_VERSION=1.12.0
-RUN https://get.daocloud.io/docker/builds/Linux/x86_64/docker-
-RUN curl -fsSLO https://get.daocloud.io/docker/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz && tar --strip-components=1 -xvzf docker-${DOCKER_VERSION}.tgz -C /usr/local/bin
-
+RUN curl -L -O https://get.docker.com/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz && ls && pwd
+RUN pwd && ls &&  tar zxf docker-${DOCKER_VERSION}.tgz -C /
 
 # Install Docker Compose
 ENV DOCKER_COMPOSE_VERSION 1.8.0
 RUN curl -L https://get.daocloud.io/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose \
     && chmod +x /usr/local/bin/docker-compose
-#RUN curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose \
-#	&& chmod +x /usr/local/bin/docker-compose
+
 
 
 # Make the jenkins user a sudoer
 # Replace the docker binary with a sudo script
 RUN echo "jenkins ALL=NOPASSWD: ALL" >> /etc/sudoers \
+    && cp /docker/* /usr/local/bin \
 	&& mv /usr/local/bin/docker /usr/local/bin/docker.bin \
 	&& printf '#!/bin/bash\nsudo docker.bin "$@"\n' > /usr/local/bin/docker \
 	&& chmod +x /usr/local/bin/docker
-
+# Replace the docker-compose binary with a sudo script
 RUN mv /usr/local/bin/docker-compose /usr/local/bin/docker-compose.bin \
 	&& printf '#!/bin/bash\nsudo docker-compose.bin "$@"\n' > /usr/local/bin/docker-compose \
 	&& chmod +x /usr/local/bin/docker-compose
